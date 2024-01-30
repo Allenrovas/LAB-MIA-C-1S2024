@@ -16,8 +16,8 @@ type Profesor struct {
 }
 
 type Estudiante struct {
-	Tipo          int32
-	Id_estudiante int32
+	Tipo          int32 //4 bytes
+	Id_estudiante int32 //4 bytes
 	CUI           [13]byte
 	Nombre        [25]byte
 	Carnet        [25]byte
@@ -73,6 +73,7 @@ func RegistroProfesor() {
 	defer arch.Close()
 
 	arch.Seek(0, io.SeekEnd)
+	//Profesor100000Estudiante100000Profesor2000000Profesor30000000
 
 	//Crear un profesor
 	var profesorNuevo Profesor
@@ -118,6 +119,8 @@ func RegistroEstudiante() {
 	defer arch.Close()
 
 	arch.Seek(0, io.SeekEnd)
+
+	//Llenar con Char 0 el espacio vacio
 
 	//Crear un estudiante
 	var estudianteNuevo Estudiante
