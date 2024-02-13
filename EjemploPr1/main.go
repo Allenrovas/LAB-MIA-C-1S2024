@@ -34,17 +34,6 @@ type MBR struct {
 	Mbr_partition4 Partition
 }
 
-func NewPartition() Partition {
-	return Partition{
-		Part_status: [1]byte{'0'},
-		Part_type:   [1]byte{'p'},
-		Part_fit:    [1]byte{'w'},
-		Part_start:  -1,
-		Part_size:   -1,
-		Part_name:   [16]byte{'~'},
-	}
-}
-
 func NewMBR() MBR {
 	return MBR{
 		Mbr_tamano:         0,
@@ -57,6 +46,18 @@ func NewMBR() MBR {
 		Mbr_partition4:     NewPartition(),
 	}
 }
+
+func NewPartition() Partition {
+	return Partition{
+		Part_status: [1]byte{'0'},
+		Part_type:   [1]byte{'p'},
+		Part_fit:    [1]byte{'w'},
+		Part_start:  -1,
+		Part_size:   -1,
+		Part_name:   [16]byte{'~', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	}
+}
+
 func main() {
 	fmt.Println("------------------------")
 	fmt.Println("-- Ejemplo Proyecto 1 --")
@@ -116,6 +117,20 @@ func analizar(comando string) {
 				fmt.Println("Ejecutando comando mkdisk")
 				//Analizar Comando Mkdisk
 				analizarMkdisk(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				analizar(comandoSeparadoString)
+			} else if valor == "rmdisk" {
+				fmt.Println("Ejecutando comando rmdisk")
+				//Analizar Comando Rmdisk
+				analizarRmdisk(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				analizar(comandoSeparadoString)
+			} else if valor == "fdisk" {
+				fmt.Println("Ejecutando comando fdisk")
+				//Analizar Comando Fdisk
+				analizarFdisk(&comandoSeparado)
 				//Pasar a string el comando separado
 				comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				analizar(comandoSeparadoString)
@@ -211,6 +226,182 @@ func analizarMkdisk(comandoSeparado *[]string) {
 		CrearDisco(sizeInt, fitValor, unitValor)
 	}
 
+}
+
+func analizarRmdisk(comandoSeparado *[]string) {
+	//rmdisk -driveletter=A
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Iterar sobre el comando separado
+	var driveletter string
+	var drive bool
+	//Iterar sobre el comando separado
+	for _, valor := range *comandoSeparado {
+		bandera := ObtenerBandera(valor)
+		banderaValor := ObtenerBanderaValor(valor)
+		if bandera == "-driveletter" {
+			driveletter = banderaValor
+			driveletter = strings.ToUpper(driveletter)
+			drive = true
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else {
+			fmt.Println("Parametro no reconocido: ", bandera)
+		}
+	}
+	//Verificar si se ingresaron los parametros obligatorios
+	if !drive {
+		fmt.Println("El parametro -driveletter es obligatorio")
+		return
+	} else {
+		//Imprimir los valores de los parametros
+		fmt.Println("Driveletter: ", driveletter)
+		//Llamar a la funcion para eliminar el disco
+		//Buscar el disco con la letra en el directorio Discos
+		//EliminarDisco(driveletter)
+		//os.Remove("Discos/" + driveletter + ".dsk")
+	}
+}
+
+func analizarFdisk(comandoSeparado *[]string) {
+	//fdisk -size=300 -driveletter=A -name=Particion1
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Booleanos para verificar si se ingresaron los parametros
+	var banderaLetter, banderaName, banderaFit, banderaUnit, banderaType, banderaDelete, banderaAdd bool
+	//Variables para almacenar los valores de los parametros
+	var sizeValor, letterValor, nameValor, fitValor, unitValor, typeValor, deleteValor, addValor string
+	//Setear valores por defecto
+	fitValor = "w"
+	unitValor = "k"
+	typeValor = "p"
+	deleteValor = "0"
+	addValor = "0"
+	sizeValor = "0"
+	//Iterar sobre el comando separado
+	for _, valor := range *comandoSeparado {
+		//-size
+		bandera := ObtenerBandera(valor)
+		//300
+		banderaValor := ObtenerBanderaValor(valor)
+		if bandera == "-size" {
+			sizeValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-driveletter" {
+			banderaLetter = true
+			letterValor = banderaValor
+			letterValor = strings.ToUpper(letterValor)
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-name" {
+			banderaName = true
+			nameValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-fit" {
+			banderaFit = true
+			fitValor = banderaValor
+			fitValor = strings.ToLower(fitValor)
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-unit" {
+			banderaUnit = true
+			unitValor = banderaValor
+			unitValor = strings.ToLower(unitValor)
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-type" {
+			banderaType = true
+			typeValor = banderaValor
+			typeValor = strings.ToLower(typeValor)
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-delete" {
+			banderaDelete = true
+			deleteValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-add" {
+			banderaAdd = true
+			addValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else {
+			fmt.Println("Parametro no reconocido: ", bandera)
+		}
+	}
+	//Obligatorios: -size(al crear), driveletter, name
+	//Verificar si se ingresaron los parametros obligatorios
+	if !banderaLetter {
+		fmt.Println("El parametro -driveletter es obligatorio")
+		return
+	} else if !banderaName {
+		fmt.Println("El parametro -name es obligatorio")
+		return
+	} else {
+		//Pasar a entero el valor del size
+		sizeInt, err := strconv.Atoi(sizeValor)
+		if err != nil {
+			fmt.Println("El valor del parametro -size no es valido")
+			return
+		}
+		if sizeInt <= 0 {
+			fmt.Println("El valor del parametro -size no es valido")
+			return
+		}
+
+		if banderaFit {
+			if fitValor != "bf" && fitValor != "ff" && fitValor != "wf" {
+				fmt.Println("El valor del parametro -fit no es valido")
+				return
+			} else {
+				if fitValor == "bf" {
+					fitValor = "b"
+				} else if fitValor == "ff" {
+					fitValor = "f"
+				} else if fitValor == "wf" {
+					fitValor = "w"
+				}
+			}
+		}
+		if !banderaUnit {
+			unitValor = "k"
+		} else {
+			if unitValor != "k" && unitValor != "m" && unitValor != "b" {
+				fmt.Println("El valor del parametro -unit no es valido")
+				return
+			}
+		}
+		if !banderaType {
+			typeValor = "p"
+		} else {
+			if typeValor != "p" && typeValor != "e" && typeValor != "l" {
+				fmt.Println("El valor del parametro -type no es valido")
+				return
+			}
+		}
+		if banderaDelete {
+			if deleteValor != "full" {
+				fmt.Println("El valor del parametro -delete no es valido")
+				return
+
+			}
+		}
+		var addInt int
+		if banderaAdd {
+			//Intentar pasar a entero el valor del size a entero
+			addInt, err := strconv.Atoi(addValor)
+			if err != nil {
+				fmt.Println("El valor del parametro -add no es valido")
+				return
+			}
+			if addInt <= 0 {
+				fmt.Println("El valor del parametro -add no es valido")
+				return
+			}
+		}
+		//Imprimir los valores de los parametros
+		fmt.Println("Size: ", sizeInt)
+		fmt.Println("Driveletter: ", letterValor)
+		fmt.Println("Name: ", nameValor)
+		fmt.Println("Fit: ", fitValor)
+		fmt.Println("Unit: ", unitValor)
+		fmt.Println("Type: ", typeValor)
+		fmt.Println("Delete: ", deleteValor)
+		fmt.Println("Add: ", addInt)
+		//Llamar a la funcion para crear la particion
+		Fdisk(sizeInt, letterValor, nameValor, fitValor, unitValor, typeValor, deleteValor, addInt)
+	}
 }
 
 func CrearDisco(sizeValor int, fitValor string, unitValor string) {
@@ -318,6 +509,134 @@ func CrearDisco(sizeValor int, fitValor string, unitValor string) {
 		return
 	}
 	fmt.Println("Disco", nombreDisco, "creado con exito")
+}
+
+func Fdisk(sizeValor int, letterValor string, nameValor string, fitValor string, unitValor string, typeValor string, deleteValor string, addValor int) {
+	//Abrir el archivo del disco
+	archivo, err := os.OpenFile("Discos/"+letterValor+".dsk", os.O_RDWR, 0777)
+	if err != nil {
+		fmt.Println("Error al abrir el disco: ", err)
+		return
+	}
+	defer archivo.Close()
+	//Leer el MBR del disco
+	var disk MBR
+	archivo.Seek(int64(0), 0)
+	err = binary.Read(archivo, binary.LittleEndian, &disk)
+	if err != nil {
+		fmt.Println("Error al leer el MBR del disco: ", err)
+		return
+	}
+	//Verificar si se va a eliminar la particion
+	if deleteValor == "0" || addValor == 0 {
+		TemporalDesplazamiento := 1 + binary.Size(MBR{})
+		var ParticionExtendida Partition
+		indiceParticion := 0
+		var nombreRepetido, verificarEspacio bool
+		if disk.Mbr_partition1.Part_size != 0 {
+			if disk.Mbr_partition1.Part_type == [1]byte{'e'} {
+				ParticionExtendida = disk.Mbr_partition1
+			}
+			if strings.Contains(string(disk.Mbr_partition1.Part_name[:]), nameValor) {
+				nombreRepetido = true
+			}
+			TemporalDesplazamiento += int(disk.Mbr_partition1.Part_size) + 1
+		} else {
+			indiceParticion = 1
+			verificarEspacio = true
+		}
+		if disk.Mbr_partition2.Part_size != 0 {
+			if disk.Mbr_partition2.Part_type == [1]byte{'e'} {
+				ParticionExtendida = disk.Mbr_partition2
+			}
+			if strings.Contains(string(disk.Mbr_partition2.Part_name[:]), nameValor) {
+				nombreRepetido = true
+			}
+			TemporalDesplazamiento += int(disk.Mbr_partition2.Part_size) + 1
+		} else if !verificarEspacio {
+			indiceParticion = 2
+			verificarEspacio = true
+		}
+		if disk.Mbr_partition3.Part_size != 0 {
+			if disk.Mbr_partition3.Part_type == [1]byte{'e'} {
+				ParticionExtendida = disk.Mbr_partition3
+			}
+			if strings.Contains(string(disk.Mbr_partition3.Part_name[:]), nameValor) {
+				nombreRepetido = true
+			}
+			TemporalDesplazamiento += int(disk.Mbr_partition3.Part_size) + 1
+		} else if !verificarEspacio {
+			indiceParticion = 3
+			verificarEspacio = true
+		}
+		if disk.Mbr_partition4.Part_size != 0 {
+			if disk.Mbr_partition4.Part_type == [1]byte{'e'} {
+				ParticionExtendida = disk.Mbr_partition4
+			}
+			if strings.Contains(string(disk.Mbr_partition4.Part_name[:]), nameValor) {
+				nombreRepetido = true
+			}
+			TemporalDesplazamiento += int(disk.Mbr_partition4.Part_size) + 1
+		} else if !verificarEspacio {
+			indiceParticion = 4
+			verificarEspacio = true
+		}
+		//Si el indice sigue siendo 0, entonces no hay espacio
+		if indiceParticion == 0 && typeValor != "l" {
+			fmt.Println("Error: No hay espacio para crear la particion")
+			return
+		}
+		//Si el nombre ya existe, entonces no se puede crear la particion
+		if nombreRepetido {
+			fmt.Println("Error: El nombre de la particion ya existe")
+			return
+		}
+		//Si el tipo es extendida y ya existe una extendida entonces no se puede crear
+		if typeValor == "e" && ParticionExtendida.Part_type == [1]byte{'e'} {
+			fmt.Println("Error: Ya existe una particion extendida")
+			return
+		}
+		//Si es diferente a la logica
+		if typeValor != "l" {
+			particionNueva := NewPartition()
+			particionNueva.Part_status = [1]byte{'1'}
+			particionNueva.Part_type = [1]byte{typeValor[0]}
+			particionNueva.Part_fit = [1]byte{fitValor[0]}
+			particionNueva.Part_start = int32(TemporalDesplazamiento)
+			var size int32
+			if unitValor == "k" {
+				size = int32(sizeValor * 1024)
+			} else if unitValor == "m" {
+				size = int32(sizeValor * 1024 * 1024)
+			} else {
+				size = int32(sizeValor)
+			}
+			particionNueva.Part_size = size
+			copy(particionNueva.Part_name[:], nameValor)
+			//Verificar si hay espacio para la particion
+			if int32(TemporalDesplazamiento)+particionNueva.Part_size+1 > disk.Mbr_tamano {
+				fmt.Println("Error: No hay espacio para crear la particion")
+				return
+			}
+			if indiceParticion == 1 {
+				disk.Mbr_partition1 = particionNueva
+			} else if indiceParticion == 2 {
+				disk.Mbr_partition2 = particionNueva
+			} else if indiceParticion == 3 {
+				disk.Mbr_partition3 = particionNueva
+			} else if indiceParticion == 4 {
+				disk.Mbr_partition4 = particionNueva
+			}
+			archivo.Seek(0, 0)
+			binary.Write(archivo, binary.LittleEndian, &disk)
+			archivo.Close()
+			if typeValor == "p" {
+				fmt.Println("Particion primaria creada con exito")
+			} else {
+				fmt.Println("Particion extendida creada con exito")
+			}
+		}
+	}
 }
 
 func Rep(comandoSeparado *[]string) {
