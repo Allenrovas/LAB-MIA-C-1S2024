@@ -1,62 +1,13 @@
 package main
 
 import (
+	"LAB-MIA-C-1S2024/EjemploPr1/Filesystem"
 	"bufio"
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"io/ioutil"
-	"math/rand"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
-
-type Partition struct {
-	Part_status [1]byte
-	Part_type   [1]byte
-	Part_fit    [1]byte
-	Part_start  int32
-	Part_size   int32
-	Part_name   [16]byte
-}
-
-type MBR struct {
-	Mbr_tamano         int32
-	Mbr_fecha_creacion [19]byte
-	Mbr_disk_signature int32
-	Dsk_fit            [1]byte
-	//Particiones [4]Partition
-	Mbr_partition1 Partition
-	Mbr_partition2 Partition
-	Mbr_partition3 Partition
-	Mbr_partition4 Partition
-}
-
-func NewMBR() MBR {
-	return MBR{
-		Mbr_tamano:         0,
-		Mbr_fecha_creacion: [19]byte{},
-		Mbr_disk_signature: 0,
-		Dsk_fit:            [1]byte{'w'},
-		Mbr_partition1:     NewPartition(),
-		Mbr_partition2:     NewPartition(),
-		Mbr_partition3:     NewPartition(),
-		Mbr_partition4:     NewPartition(),
-	}
-}
-
-func NewPartition() Partition {
-	return Partition{
-		Part_status: [1]byte{'0'},
-		Part_type:   [1]byte{'p'},
-		Part_fit:    [1]byte{'w'},
-		Part_start:  -1,
-		Part_size:   -1,
-		Part_name:   [16]byte{'~', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	}
-}
 
 func main() {
 	fmt.Println("------------------------")
@@ -136,7 +87,7 @@ func analizar(comando string) {
 				analizar(comandoSeparadoString)
 			} else if valor == "rep" {
 				fmt.Println("Ejecutando comando rep")
-				Rep(&comandoSeparado)
+				Filesystem.ReporteDisk(&comandoSeparado)
 			} else if valor == "\n" {
 				continue
 			} else if valor == "\r" {
@@ -223,7 +174,8 @@ func analizarMkdisk(comandoSeparado *[]string) {
 		fmt.Println("Fit: ", fitValor)
 		fmt.Println("Unit: ", unitValor)
 		//Llamar a la funcion para crear el disco
-		CrearDisco(sizeInt, fitValor, unitValor)
+		//CrearDisco(sizeInt, fitValor, unitValor)
+		Filesystem.CrearDisco(sizeInt, fitValor, unitValor)
 	}
 
 }
@@ -385,7 +337,7 @@ func analizarFdisk(comandoSeparado *[]string) {
 				fmt.Println("El valor del parametro -add no es valido")
 				return
 			}
-			if addInt <= 0 {
+			if addInt != 0 {
 				fmt.Println("El valor del parametro -add no es valido")
 				return
 			}
@@ -400,269 +352,8 @@ func analizarFdisk(comandoSeparado *[]string) {
 		fmt.Println("Delete: ", deleteValor)
 		fmt.Println("Add: ", addInt)
 		//Llamar a la funcion para crear la particion
-		Fdisk(sizeInt, letterValor, nameValor, fitValor, unitValor, typeValor, deleteValor, addInt)
+		Filesystem.Fdisk(sizeInt, letterValor, nameValor, fitValor, unitValor, typeValor, deleteValor, addInt)
 	}
-}
-
-func CrearDisco(sizeValor int, fitValor string, unitValor string) {
-	//Tamano en bytes
-	if unitValor == "k" && sizeValor != 0 {
-		sizeValor = sizeValor * 1024
-	} else if unitValor == "m" && sizeValor != 0 {
-		sizeValor = sizeValor * 1024 * 1024
-	} else {
-		fmt.Println("El valor del parametro -unit no es valido")
-		return
-	}
-	//Crear Directorio Discos si no existe para almacenar los discos
-
-	//Si no existe el directorio Discos, entonces crearlo
-	if _, err := os.Stat("Discos"); os.IsNotExist(err) {
-		err = os.Mkdir("Discos", 0664)
-		if err != nil {
-			fmt.Println("Error al crear el directorio Discos: ", err)
-			return
-		}
-	}
-	//Contar la cantidad de discos para asignar el nombre
-	archivos, err := ioutil.ReadDir("Discos")
-	if err != nil {
-		fmt.Println("Error al leer el directorio: ", err)
-		return
-	}
-	//Declarar las letras del abecedario
-	letras := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	//Nombre del disco a partir de la cantidad de discos, por ejemplo A=1, B=2, C=3
-	nombreDisco := string(letras[len(archivos)])
-	//Crear el archivo del disco
-	archivo, err := os.Create("Discos/" + nombreDisco + ".dsk")
-	if err != nil {
-		fmt.Println("Error al crear el archivo del disco: ", err)
-		return
-	}
-	defer archivo.Close()
-
-	//Escribir el MBR en el disco
-	randomNum := rand.Intn(99) + 1
-	var disk MBR
-	fmt.Println("Size: ", sizeValor)
-	disk.Mbr_tamano = int32(sizeValor)
-	disk.Mbr_disk_signature = int32(randomNum)
-	fitAux := []byte(fitValor)
-	disk.Dsk_fit = [1]byte{fitAux[0]}
-	fechaActual := time.Now()
-	fecha := fechaActual.Format("2006-01-02 15:04:05")
-	copy(disk.Mbr_fecha_creacion[:], fecha)
-
-	//Escribir en las particiones
-
-	disk.Mbr_partition1.Part_status = [1]byte{'0'}
-	disk.Mbr_partition2.Part_status = [1]byte{'0'}
-	disk.Mbr_partition3.Part_status = [1]byte{'0'}
-	disk.Mbr_partition4.Part_status = [1]byte{'0'}
-
-	disk.Mbr_partition1.Part_type = [1]byte{'0'}
-	disk.Mbr_partition2.Part_type = [1]byte{'0'}
-	disk.Mbr_partition3.Part_type = [1]byte{'0'}
-	disk.Mbr_partition4.Part_type = [1]byte{'0'}
-
-	disk.Mbr_partition1.Part_fit = [1]byte{'0'}
-	disk.Mbr_partition2.Part_fit = [1]byte{'0'}
-	disk.Mbr_partition3.Part_fit = [1]byte{'0'}
-	disk.Mbr_partition4.Part_fit = [1]byte{'0'}
-
-	disk.Mbr_partition1.Part_start = 0
-	disk.Mbr_partition2.Part_start = 0
-	disk.Mbr_partition3.Part_start = 0
-	disk.Mbr_partition4.Part_start = 0
-
-	disk.Mbr_partition1.Part_size = 0
-	disk.Mbr_partition2.Part_size = 0
-	disk.Mbr_partition3.Part_size = 0
-	disk.Mbr_partition4.Part_size = 0
-
-	disk.Mbr_partition1.Part_name = [16]byte{'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'}
-	disk.Mbr_partition2.Part_name = [16]byte{'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'}
-	disk.Mbr_partition3.Part_name = [16]byte{'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'}
-	disk.Mbr_partition4.Part_name = [16]byte{'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0'}
-
-	bufer := new(bytes.Buffer)
-	for i := 0; i < 1024; i++ {
-		bufer.WriteByte(0)
-	}
-
-	var totalBytes int = 0
-	for totalBytes < int(sizeValor) {
-		c, err := archivo.Write(bufer.Bytes())
-		if err != nil {
-			fmt.Println("Error al escribir en el archivo: ", err)
-			return
-		}
-		totalBytes += c
-	}
-	fmt.Println("Archivo llenado con 0s")
-	//Escribir el MBR en el disco
-	archivo.Seek(0, 0)
-	err = binary.Write(archivo, binary.LittleEndian, &disk)
-	if err != nil {
-		fmt.Println("Error al escribir el MBR en el disco: ", err)
-		return
-	}
-	fmt.Println("Disco", nombreDisco, "creado con exito")
-}
-
-func Fdisk(sizeValor int, letterValor string, nameValor string, fitValor string, unitValor string, typeValor string, deleteValor string, addValor int) {
-	//Abrir el archivo del disco
-	archivo, err := os.OpenFile("Discos/"+letterValor+".dsk", os.O_RDWR, 0777)
-	if err != nil {
-		fmt.Println("Error al abrir el disco: ", err)
-		return
-	}
-	defer archivo.Close()
-	//Leer el MBR del disco
-	var disk MBR
-	archivo.Seek(int64(0), 0)
-	err = binary.Read(archivo, binary.LittleEndian, &disk)
-	if err != nil {
-		fmt.Println("Error al leer el MBR del disco: ", err)
-		return
-	}
-	//Verificar si se va a eliminar la particion
-	if deleteValor == "0" || addValor == 0 {
-		TemporalDesplazamiento := 1 + binary.Size(MBR{})
-		var ParticionExtendida Partition
-		indiceParticion := 0
-		var nombreRepetido, verificarEspacio bool
-		if disk.Mbr_partition1.Part_size != 0 {
-			if disk.Mbr_partition1.Part_type == [1]byte{'e'} {
-				ParticionExtendida = disk.Mbr_partition1
-			}
-			if strings.Contains(string(disk.Mbr_partition1.Part_name[:]), nameValor) {
-				nombreRepetido = true
-			}
-			TemporalDesplazamiento += int(disk.Mbr_partition1.Part_size) + 1
-		} else {
-			indiceParticion = 1
-			verificarEspacio = true
-		}
-		if disk.Mbr_partition2.Part_size != 0 {
-			if disk.Mbr_partition2.Part_type == [1]byte{'e'} {
-				ParticionExtendida = disk.Mbr_partition2
-			}
-			if strings.Contains(string(disk.Mbr_partition2.Part_name[:]), nameValor) {
-				nombreRepetido = true
-			}
-			TemporalDesplazamiento += int(disk.Mbr_partition2.Part_size) + 1
-		} else if !verificarEspacio {
-			indiceParticion = 2
-			verificarEspacio = true
-		}
-		if disk.Mbr_partition3.Part_size != 0 {
-			if disk.Mbr_partition3.Part_type == [1]byte{'e'} {
-				ParticionExtendida = disk.Mbr_partition3
-			}
-			if strings.Contains(string(disk.Mbr_partition3.Part_name[:]), nameValor) {
-				nombreRepetido = true
-			}
-			TemporalDesplazamiento += int(disk.Mbr_partition3.Part_size) + 1
-		} else if !verificarEspacio {
-			indiceParticion = 3
-			verificarEspacio = true
-		}
-		if disk.Mbr_partition4.Part_size != 0 {
-			if disk.Mbr_partition4.Part_type == [1]byte{'e'} {
-				ParticionExtendida = disk.Mbr_partition4
-			}
-			if strings.Contains(string(disk.Mbr_partition4.Part_name[:]), nameValor) {
-				nombreRepetido = true
-			}
-			TemporalDesplazamiento += int(disk.Mbr_partition4.Part_size) + 1
-		} else if !verificarEspacio {
-			indiceParticion = 4
-			verificarEspacio = true
-		}
-		//Si el indice sigue siendo 0, entonces no hay espacio
-		if indiceParticion == 0 && typeValor != "l" {
-			fmt.Println("Error: No hay espacio para crear la particion")
-			return
-		}
-		//Si el nombre ya existe, entonces no se puede crear la particion
-		if nombreRepetido {
-			fmt.Println("Error: El nombre de la particion ya existe")
-			return
-		}
-		//Si el tipo es extendida y ya existe una extendida entonces no se puede crear
-		if typeValor == "e" && ParticionExtendida.Part_type == [1]byte{'e'} {
-			fmt.Println("Error: Ya existe una particion extendida")
-			return
-		}
-		//Si es diferente a la logica
-		if typeValor != "l" {
-			particionNueva := NewPartition()
-			particionNueva.Part_status = [1]byte{'1'}
-			particionNueva.Part_type = [1]byte{typeValor[0]}
-			particionNueva.Part_fit = [1]byte{fitValor[0]}
-			particionNueva.Part_start = int32(TemporalDesplazamiento)
-			var size int32
-			if unitValor == "k" {
-				size = int32(sizeValor * 1024)
-			} else if unitValor == "m" {
-				size = int32(sizeValor * 1024 * 1024)
-			} else {
-				size = int32(sizeValor)
-			}
-			particionNueva.Part_size = size
-			copy(particionNueva.Part_name[:], nameValor)
-			//Verificar si hay espacio para la particion
-			if int32(TemporalDesplazamiento)+particionNueva.Part_size+1 > disk.Mbr_tamano {
-				fmt.Println("Error: No hay espacio para crear la particion")
-				return
-			}
-			if indiceParticion == 1 {
-				disk.Mbr_partition1 = particionNueva
-			} else if indiceParticion == 2 {
-				disk.Mbr_partition2 = particionNueva
-			} else if indiceParticion == 3 {
-				disk.Mbr_partition3 = particionNueva
-			} else if indiceParticion == 4 {
-				disk.Mbr_partition4 = particionNueva
-			}
-			archivo.Seek(0, 0)
-			binary.Write(archivo, binary.LittleEndian, &disk)
-			archivo.Close()
-			if typeValor == "p" {
-				fmt.Println("Particion primaria creada con exito")
-			} else {
-				fmt.Println("Particion extendida creada con exito")
-			}
-		}
-	}
-}
-
-func Rep(comandoSeparado *[]string) {
-	*comandoSeparado = (*comandoSeparado)[1:]
-	//Abrir el disco A
-	archivo, err := os.Open("Discos/A.dsk")
-	if err != nil {
-		fmt.Println("Error al abrir el disco: ", err)
-		return
-	}
-	defer archivo.Close()
-	disk := NewMBR()
-	archivo.Seek(int64(0), 0)
-	err = binary.Read(archivo, binary.LittleEndian, &disk)
-	if err != nil {
-		fmt.Println("Error al leer el MBR del disco: ", err)
-		return
-	}
-	fmt.Println("Tamaño: ", disk.Mbr_tamano)
-	fmt.Println("Fecha: ", string(disk.Mbr_fecha_creacion[:]))
-	fmt.Println("Signature: ", disk.Mbr_disk_signature)
-	fmt.Println("Fit: ", string(disk.Dsk_fit[:]))
-	fmt.Println("Partition1: ", string(disk.Mbr_partition1.Part_status[:]))
-	fmt.Println("Partition2: ", string(disk.Mbr_partition2.Part_status[:]))
-	fmt.Println("Partition3: ", string(disk.Mbr_partition3.Part_status[:]))
-	fmt.Println("Partition4: ", string(disk.Mbr_partition4.Part_status[:]))
 }
 
 func ObtenerBandera(bandera string) string {
