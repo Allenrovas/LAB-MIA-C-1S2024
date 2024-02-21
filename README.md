@@ -9,3 +9,6 @@
 ### Clase 13-02
 [Enlace a la clase](https://drive.google.com/file/d/116hyItm9iQP0xAngz-qxKLIz695Eu5uO/view)
 ### Clase Extra
+[Enlace a la clase](https://drive.google.com/file/d/12SVfrD7jN6mjP04iq8_X_j2r9GBu5qAi/view)
+### Clase 20-02
+[Enlace a la clase](https://drive.google.com/file/d/1U2a0DxvvzbR0FhGtf-BAJEUHwf0f0BVw/view)
