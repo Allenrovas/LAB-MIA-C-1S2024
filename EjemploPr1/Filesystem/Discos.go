@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -301,5 +302,179 @@ func Fdisk(sizeValor int, letterValor string, nameValor string, fitValor string,
 			fmt.Println("Particion logica creada con exito")
 			return
 		}
+	}
+}
+
+// Funcion para hacer mount
+func MountPartition(letterValor string, nameValor string) {
+	//Abrir el archivo del disco
+	archivo, err := os.OpenFile("Discos/"+letterValor+".dsk", os.O_RDWR, 0777)
+	if err != nil {
+		fmt.Println("Error al abrir el disco: ", err)
+		return
+	}
+	defer archivo.Close()
+	//Leer el MBR del disco
+	var disk MBR
+	archivo.Seek(int64(0), 0)
+	binary.Read(archivo, binary.LittleEndian, &disk)
+	//Verificar si el MBR es valido
+	if disk.Mbr_tamano == 0 {
+		fmt.Println("Error: El disco no es valido")
+		return
+	}
+	//Verificar si la particion existe
+	indiceParticion := 0
+	if strings.Contains(string(disk.Mbr_partition1.Part_name[:]), nameValor) {
+		indiceParticion = 1
+	} else if strings.Contains(string(disk.Mbr_partition2.Part_name[:]), nameValor) {
+		indiceParticion = 2
+	} else if strings.Contains(string(disk.Mbr_partition3.Part_name[:]), nameValor) {
+		indiceParticion = 3
+	} else if strings.Contains(string(disk.Mbr_partition4.Part_name[:]), nameValor) {
+		indiceParticion = 4
+	}
+	if indiceParticion != 0 {
+		if indiceParticion == 1 {
+			particion := disk.Mbr_partition1
+			//Verificar si la particion esta montada
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor && particionesMontadas[i].Name == nameValor {
+					fmt.Println("Error: La particion ya esta montada")
+					return
+				}
+			}
+			//Montar la particion
+			var particionMontada Mount
+			particionMontada.LetterValor = letterValor
+			particionMontada.Name = nameValor
+			particionMontada.Part_type = particion.Part_type
+
+			//ID:Letra Del Disco + Correlativo Partición + *Últimos dos dígitos del Carne
+
+			//Obtener el correlativo de la particion
+			contador := 1
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor {
+					contador++
+				}
+			}
+			particionMontada.Id = letterValor + strconv.Itoa(contador) + "45"
+			particionMontada.Start = particion.Part_start
+			particionMontada.Size = particion.Part_size
+			//Agregar la particion montada
+			particionesMontadas = append(particionesMontadas, particionMontada)
+			//Escribir en el MBR y cambiar el status
+			disk.Mbr_partition1.Part_status = [1]byte{'1'}
+			archivo.Seek(0, 0)
+			binary.Write(archivo, binary.LittleEndian, &disk)
+			fmt.Println("Particion montada con exito con ID: ", particionMontada.Id)
+		} else if indiceParticion == 2 {
+			particion := disk.Mbr_partition2
+			//Verificar si la particion esta montada
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor && particionesMontadas[i].Name == nameValor {
+					fmt.Println("Error: La particion ya esta montada")
+					return
+				}
+			}
+			//Montar la particion
+			var particionMontada Mount
+			particionMontada.LetterValor = letterValor
+			particionMontada.Name = nameValor
+			particionMontada.Part_type = particion.Part_type
+
+			//ID:Letra Del Disco + Correlativo Partición + *Últimos dos dígitos del Carne
+
+			//Obtener el correlativo de la particion
+			contador := 1
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor {
+					contador++
+				}
+			}
+			particionMontada.Id = letterValor + strconv.Itoa(contador) + "45"
+			particionMontada.Start = particion.Part_start
+			particionMontada.Size = particion.Part_size
+			//Agregar la particion montada
+			particionesMontadas = append(particionesMontadas, particionMontada)
+			//Escribir en el MBR y cambiar el status
+			disk.Mbr_partition2.Part_status = [1]byte{'1'}
+			archivo.Seek(0, 0)
+			binary.Write(archivo, binary.LittleEndian, &disk)
+			fmt.Println("Particion montada con exito con ID: ", particionMontada.Id)
+		} else if indiceParticion == 3 {
+			particion := disk.Mbr_partition3
+			//Verificar si la particion esta montada
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor && particionesMontadas[i].Name == nameValor {
+					fmt.Println("Error: La particion ya esta montada")
+					return
+				}
+			}
+			//Montar la particion
+			var particionMontada Mount
+			particionMontada.LetterValor = letterValor
+			particionMontada.Name = nameValor
+			particionMontada.Part_type = particion.Part_type
+
+			//ID:Letra Del Disco + Correlativo Partición + *Últimos dos dígitos del Carne
+
+			//Obtener el correlativo de la particion
+			contador := 1
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor {
+					contador++
+				}
+			}
+			particionMontada.Id = letterValor + strconv.Itoa(contador) + "45"
+			particionMontada.Start = particion.Part_start
+			particionMontada.Size = particion.Part_size
+			//Agregar la particion montada
+			particionesMontadas = append(particionesMontadas, particionMontada)
+			//Escribir en el MBR y cambiar el status
+			disk.Mbr_partition3.Part_status = [1]byte{'1'}
+			archivo.Seek(0, 0)
+			binary.Write(archivo, binary.LittleEndian, &disk)
+			fmt.Println("Particion montada con exito con ID: ", particionMontada.Id)
+		} else if indiceParticion == 4 {
+			particion := disk.Mbr_partition4
+			//Verificar si la particion esta montada
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor && particionesMontadas[i].Name == nameValor {
+					fmt.Println("Error: La particion ya esta montada")
+					return
+				}
+			}
+			//Montar la particion
+			var particionMontada Mount
+			particionMontada.LetterValor = letterValor
+			particionMontada.Name = nameValor
+			particionMontada.Part_type = particion.Part_type
+
+			//ID:Letra Del Disco + Correlativo Partición + *Últimos dos dígitos del Carne
+
+			//Obtener el correlativo de la particion
+			contador := 1
+			for i := 0; i < len(particionesMontadas); i++ {
+				if particionesMontadas[i].LetterValor == letterValor {
+					contador++
+				}
+			}
+			particionMontada.Id = letterValor + strconv.Itoa(contador) + "45"
+			particionMontada.Start = particion.Part_start
+			particionMontada.Size = particion.Part_size
+			//Agregar la particion montada
+			particionesMontadas = append(particionesMontadas, particionMontada)
+			//Escribir en el MBR y cambiar el status
+			disk.Mbr_partition4.Part_status = [1]byte{'1'}
+			archivo.Seek(0, 0)
+			binary.Write(archivo, binary.LittleEndian, &disk)
+			fmt.Println("Particion montada con exito con ID: ", particionMontada.Id)
+			return
+		}
+	} else {
+		fmt.Println("Error: La particion no existe")
+		return
 	}
 }
