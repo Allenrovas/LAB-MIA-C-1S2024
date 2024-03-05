@@ -9,7 +9,22 @@ type Mount struct {
 	Size        int32
 }
 
+type usuarioActual struct {
+	Uid int32
+	Gid int32
+	Grp string
+	Usr string
+	Pwd string
+	Pid string
+}
+
+func NuevoUsuarioActual() usuarioActual {
+	return usuarioActual{-1, -1, "", "", "", ""}
+}
+
 var particionesMontadas []Mount
+
+var Usr_sesion usuarioActual = NuevoUsuarioActual()
 
 func VerificarParticionMontada(id string) int {
 	for i := 0; i < len(particionesMontadas); i++ {

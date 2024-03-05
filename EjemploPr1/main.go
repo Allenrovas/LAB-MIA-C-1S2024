@@ -105,6 +105,13 @@ func analizar(comando string) {
 				//Pasar a string el comando separado
 				comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				analizar(comandoSeparadoString)
+			} else if valor == "login" {
+				fmt.Println("Ejecutando comando login")
+				//Analizar Comando Login
+				analizarLogin(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				analizar(comandoSeparadoString)
 			} else if valor == "\n" {
 				continue
 			} else if valor == "\r" {
@@ -472,6 +479,56 @@ func analizarMount(comandoSeparado *[]string) {
 		fmt.Println("Name: ", nameValor)
 		//Llamar a la funcion para montar la particion
 		Filesystem.MountPartition(letterValor, nameValor)
+	}
+}
+
+func analizarLogin(comandoSeparado *[]string) {
+	//mount -driveletter=A -name=Part1 #id=A118
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Booleanos para verificar si se ingresaron los parametros
+	var banderaUser, banderaPassword, banderaId bool
+	//Variables para almacenar los valores de los parametros
+	var userValor, passwordValor, idValor string
+	//Iterar sobre el comando separado
+	for _, valor := range *comandoSeparado {
+		bandera := ObtenerBandera(valor)
+		banderaValor := ObtenerBanderaValor(valor)
+		if bandera == "-user" {
+			banderaUser = true
+			userValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-pass" {
+			banderaPassword = true
+			passwordValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-id" {
+			banderaId = true
+			idValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else {
+			fmt.Println("Parametro no reconocido: ", bandera)
+		}
+	}
+	//Obligatorios: -user, -pass, -id
+	//Verificar si se ingresaron los parametros obligatorios
+	if !banderaUser {
+		fmt.Println("El parametro -user es obligatorio")
+		return
+	}
+	if !banderaPassword {
+		fmt.Println("El parametro -pass es obligatorio")
+		return
+	}
+	if !banderaId {
+		fmt.Println("El parametro -id es obligatorio")
+		return
+	} else {
+		//Imprimir los valores de los parametros
+		fmt.Println("User: ", userValor)
+		fmt.Println("Password: ", passwordValor)
+		fmt.Println("Id: ", idValor)
+		//Llamar a la funcion para montar la particion
+		Filesystem.Login(userValor, passwordValor, idValor)
 	}
 }
 
