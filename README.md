@@ -12,3 +12,5 @@
 [Enlace a la clase](https://drive.google.com/file/d/12SVfrD7jN6mjP04iq8_X_j2r9GBu5qAi/view)
 ### Clase 20-02
 [Enlace a la clase](https://drive.google.com/file/d/1U2a0DxvvzbR0FhGtf-BAJEUHwf0f0BVw/view)
+### Clase 27-02
+[Enlace a la clase](https://drive.google.com/file/d/16Ug7YPIxc5ESkBRkI57tgTQB5Mav_XK2/view)
