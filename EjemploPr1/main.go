@@ -90,7 +90,11 @@ func analizar(comando string) {
 				analizar(comandoSeparadoString)
 			} else if valor == "rep" {
 				fmt.Println("Ejecutando comando rep")
-				Filesystem.ReporteDisk(&comandoSeparado)
+				//Analizar Comando Rep
+				analizarRep(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				analizar(comandoSeparadoString)
 			} else if valor == "mount" {
 				fmt.Println("Ejecutando comando mount")
 				//Analizar Comando Mount
@@ -109,6 +113,13 @@ func analizar(comando string) {
 				fmt.Println("Ejecutando comando login")
 				//Analizar Comando Login
 				analizarLogin(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				analizar(comandoSeparadoString)
+			} else if valor == "logout" {
+				fmt.Println("Ejecutando comando logout")
+				//Analizar Comando Logout
+				analizarLogout(&comandoSeparado)
 				//Pasar a string el comando separado
 				comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				analizar(comandoSeparadoString)
@@ -530,6 +541,81 @@ func analizarLogin(comandoSeparado *[]string) {
 		//Llamar a la funcion para montar la particion
 		Filesystem.Login(userValor, passwordValor, idValor)
 	}
+}
+
+func analizarLogout(comandoSeparado *[]string) {
+	//Eliminar el primer valor del comando separado
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Llamar a la funcion para desmontar la particion
+	Filesystem.Logout()
+}
+
+func analizarRep(comandoSeparado *[]string) {
+	//rep -id=A118 -path=/home/user/reports/report8.jpg -name=tree
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Booleanos para verificar si se ingresaron los parametros
+	var banderaId, banderaPath, banderaName, banderaRuta bool
+	//Variables para almacenar los valores de los parametros
+	var idValor, pathValor, nameValor, rutaValor string
+	//Iterar sobre el comando separado
+	for _, valor := range *comandoSeparado {
+		bandera := ObtenerBandera(valor)
+		banderaValor := ObtenerBanderaValor(valor)
+		if bandera == "-id" {
+			banderaId = true
+			idValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-path" {
+			banderaPath = true
+			pathValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-name" {
+			banderaName = true
+			nameValor = banderaValor
+			nameValor = strings.ToLower(nameValor)
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-ruta" {
+			banderaRuta = true
+			rutaValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else {
+			fmt.Println("Parametro no reconocido: ", bandera)
+		}
+	}
+	//Obligatorios: -id, -path, -name
+	//Verificar si se ingresaron los parametros obligatorios
+	if !banderaId {
+		fmt.Println("El parametro -id es obligatorio")
+		return
+	}
+	if !banderaPath {
+		fmt.Println("El parametro -path es obligatorio")
+		return
+	}
+	if !banderaName {
+		fmt.Println("El parametro -name es obligatorio")
+		return
+	} else {
+		if nameValor == "file" || nameValor == "ls" {
+			if !banderaRuta {
+				fmt.Println("El parametro -ruta es obligatorio")
+				return
+			}
+			fmt.Println("Id: ", idValor)
+			fmt.Println("Path: ", pathValor)
+			fmt.Println("Name: ", nameValor)
+			fmt.Println("Ruta: ", rutaValor)
+		}
+		if nameValor == "tree" {
+			Filesystem.RepTree(idValor, pathValor)
+		} else if nameValor == "disk" {
+			Filesystem.ReporteDisk(idValor, pathValor)
+		} else if nameValor == "sb" {
+			Filesystem.ReporteSB(idValor, pathValor)
+		}
+
+	}
+
 }
 
 func ObtenerBandera(bandera string) string {

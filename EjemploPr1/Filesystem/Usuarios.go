@@ -95,6 +95,15 @@ func Login(userValor string, pwdValor string, idValor string) {
 	fmt.Println("Sesión iniciada con éxito en la partición: " + idValor + " con el usuario: " + userValor)
 }
 
+func Logout() {
+	if Usr_sesion.Uid == -1 {
+		println("No hay una sesión iniciada")
+		return
+	}
+	Usr_sesion = NuevoUsuarioActual()
+	fmt.Println("Sesión cerrada con éxito")
+}
+
 func BuscarArchivo(ruta string, MountActual Mount, SuperBlock SuperBlock, file *os.File) int {
 	pathSplit := strings.Split(ruta, "/")
 	var newPath []string
