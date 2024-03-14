@@ -1,3 +1,4 @@
+```
 void comandoFdisk(char Path[512], char Name[16], int Size, char Unit[25], char Type[25], char Fit[25], char Delete[25], int Add){
     FILE *archivo = fopen(Path, "rb+");//abrimos el archivo
     if (archivo== NULL){
@@ -506,3 +507,4 @@ void comandoFdisk(char Path[512], char Name[16], int Size, char Unit[25], char T
         }
     }
 }
+```
